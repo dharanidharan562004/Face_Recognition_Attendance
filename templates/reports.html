@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Attendance Reports</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Attendance Reports</h2>
+
+        <!-- Filter Form -->
+        <div class="card mb-4 p-3 bg-light">
+            <form action="/reports" method="post" class="row g-3">
+                <div class="col-auto">
+                    <label class="col-form-label">Select Date:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Filter Report</button>
+                    <a href="/reports" class="btn btn-outline-secondary">Show All</a>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a href="/" class="btn btn-success">Back to Home</a>
+                </div>
+            </form>
+        </div>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Roll Number</th>
+                    <th>Date</th>
+                    <th>First In</th>
+                    <th>Last Out</th>
+                    <th>Duration</th>
+                    <th>Records</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td class="text-success">{{ row[3].split(' ')[1] }}</td> <!-- Show only time part -->
+                    <td class="text-danger">{{ row[4].split(' ')[1] }}</td>
+                    <td><strong>{{ row[6] }}</strong></td>
+                    <td>{{ row[5] }}</td>
+                    <td>
+                        {% if row[5] % 2 != 0 %}
+                        <span class="badge bg-warning text-dark">Currently IN</span>
+                        {% else %}
+                        <span class="badge bg-success">Completed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center">No attendance records found for this period.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-4">
+            <h4>Summary</h4>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Total Present
+                    <span class="badge bg-primary rounded-pill">{{ report|length }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

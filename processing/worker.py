@@ -33,8 +33,10 @@ class DetectionWorker(QThread):
                 self.result_ready.emit("circle", self._detect_circle())
             elif self._mode == "rectangle":
                 self.result_ready.emit("rectangle", self._detect_rectangle())
-            elif self._mode == "qr":
-                self.result_ready.emit("qr", self._detect_qr())
+            elif self._mode in ("qr", "qr_for_label_edit"):
+                result = self._detect_qr()
+                emit_type = "qr_for_label_edit" if self._mode == "qr_for_label_edit" else "qr"
+                self.result_ready.emit(emit_type, result)
         except Exception as e:
             self.error.emit(str(e))
 

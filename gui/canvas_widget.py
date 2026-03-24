@@ -56,6 +56,8 @@ class CanvasWidget(QLabel):
     patch_phase_changed  = pyqtSignal()
     pen_edit_region      = pyqtSignal()   # edit text in rect region
     pen_scan_qr_region   = pyqtSignal()   # scan QR in region
+    qr_right_clicked     = pyqtSignal(dict)  # QR region right-clicked → dict
+    text_right_clicked   = pyqtSignal(dict)  # text region right-clicked → dict
 
     KEY_MOVE   = 10
     KEY_RESIZE = 15
@@ -74,6 +76,7 @@ class CanvasWidget(QLabel):
         self._crop_type    = None
         self._crop_params  = {}
         self._qr_regions   = []
+        self._text_regions = []   # OCR text boxes for label edit
 
         self._scale        = 1.0
         self._offset       = QPoint(0, 0)
@@ -129,6 +132,7 @@ class CanvasWidget(QLabel):
         self._crop_type   = None
         self._crop_params = {}
         self._qr_regions  = []
+        self._text_regions = []
         self._drag_zone   = _NONE
         self._drag_orig   = {}
         self._pen_mode    = False
@@ -158,6 +162,11 @@ class CanvasWidget(QLabel):
 
     def set_qr_regions(self, regions):
         self._qr_regions = regions
+        self._render_overlay()
+
+    def set_text_regions(self, regions):
+        """Set OCR text regions for label edit highlighting."""
+        self._text_regions = regions
         self._render_overlay()
 
     # ── Pen Tool API ─────────────────────────────────────────────────────
@@ -383,6 +392,8 @@ class CanvasWidget(QLabel):
             self._draw_crop(p)
         for r in self._qr_regions:
             self._draw_qr(p, r)
+        for r in self._text_regions:
+            self._draw_text_region(p, r)
         if self._pen_mode:
             self._draw_pen(p)
         if self._patch_mode:
@@ -948,6 +959,30 @@ class CanvasWidget(QLabel):
             p.setPen(QColor(220,50,50))
             p.drawText(int(bx*s)+ox, int(by*s)+oy-4, lbl[:40])
 
+    def _draw_text_region(self, p, region):
+        """Draw blue highlight box around OCR text region."""
+        s = self._scale
+        ox, oy = self._offset.x(), self._offset.y()
+        bx, by, bw, bh = region["bbox"]
+        wx = int(bx*s)+ox;  wy = int(by*s)+oy
+        ww = int(bw*s);     wh = int(bh*s)
+
+        # Filled tint
+        p.setPen(Qt.NoPen)
+        p.setBrush(QBrush(QColor(40, 120, 255, 35)))
+        p.drawRect(QRect(wx, wy, ww, wh))
+        p.setBrush(Qt.NoBrush)
+
+        # Border
+        p.setPen(QPen(QColor(40, 120, 255), 2, Qt.SolidLine))
+        p.drawRect(QRect(wx, wy, ww, wh))
+
+        # "✏ right-click to edit" label above box
+        txt = region.get("text", "")[:30]
+        p.setFont(QFont("Arial", 8, QFont.Bold))
+        p.setPen(QColor(20, 80, 200))
+        p.drawText(wx + 2, wy - 4, f"✏ {txt}")
+
     # ── Hit testing ───────────────────────────────────────────────────────
 
     def _hit(self, wp):
@@ -1129,6 +1164,29 @@ class CanvasWidget(QLabel):
                 self._render_overlay()))
             menu.exec_(event.globalPos())
             event.accept(); return
+
+        # ── QR region right-click → emit signal ──────────────────────
+        if event.button() == Qt.RightButton and not self._pen_mode:
+            ix = (event.x() - self._offset.x()) / self._scale
+            iy = (event.y() - self._offset.y()) / self._scale
+
+            # Check QR regions first
+            for region in self._qr_regions:
+                bx, by, bw, bh = region["bbox"]
+                pad = max(10, int(max(bw, bh) * 0.15))
+                if (bx - pad <= ix <= bx + bw + pad and
+                        by - pad <= iy <= by + bh + pad):
+                    self.qr_right_clicked.emit(region)
+                    event.accept(); return
+
+            # Check text regions
+            for region in self._text_regions:
+                bx, by, bw, bh = region["bbox"]
+                pad = 6
+                if (bx - pad <= ix <= bx + bw + pad and
+                        by - pad <= iy <= by + bh + pad):
+                    self.text_right_clicked.emit(region)
+                    event.accept(); return
 
         if event.button() == Qt.LeftButton and self._crop_type:
             zone = self._hit(event.pos())

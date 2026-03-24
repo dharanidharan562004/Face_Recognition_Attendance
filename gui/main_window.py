@@ -550,11 +550,17 @@ class MainWindow(QMainWindow):
         btn_row.addWidget(self._btn_rect)
         crop_layout.addLayout(btn_row)
 
-        # Pen tool button — disabled until circle/rect detected
+        # ── Row 2: Pen Tool + Patch Tool ──────────────────────────────
+        tools_row1 = QHBoxLayout()
+        tools_row1.setSpacing(6)
 
+        _tool_ss = (
+            "QPushButton{background:#eef1f6;color:#1c2333;border:1px solid #c0cce0;"
+            "border-radius:6px;padding:5px 8px;font-size:12px;font-weight:bold;}"
+            "QPushButton:enabled:hover{background:#dce8f8;border:1px solid #8aaace;}"
+            "QPushButton:checked{background:#3e6188;color:white;border:1px solid #2a5070;}"
+            "QPushButton:disabled{background:#f0f0f0;color:#aaa;border:1px solid #ddd;}")
 
-        # ── Patch Tool ────────────────────────────────────────────────
-        # ── Pen Tool (always enabled) ─────────────────────────────────
         self._btn_pen = QPushButton("✏  Pen Tool")
         self._btn_pen.setCheckable(True)
         self._btn_pen.setMinimumHeight(34)
@@ -565,13 +571,8 @@ class MainWindow(QMainWindow):
             "Right-click = context menu\n"
             "Enter = Apply Crop  |  Esc = Cancel")
         self._btn_pen.clicked.connect(self._toggle_pen_tool)
-        self._btn_pen.setStyleSheet(
-            "QPushButton { background:#eef1f6; color:#1c2333; border:1px solid #c0cce0;"
-            " border-radius:6px; padding:5px 14px; font-size:12px; font-weight:bold; }"
-            "QPushButton:enabled:hover { background:#dce8f8; border:1px solid #8aaace; }"
-            "QPushButton:checked { background:#3e6188; color:white; border:1px solid #2a5070; }"
-            "QPushButton:disabled { background:#f0f0f0; color:#aaa; border:1px solid #ddd; }")
-        crop_layout.addWidget(self._btn_pen)
+        self._btn_pen.setStyleSheet(_tool_ss)
+        tools_row1.addWidget(self._btn_pen)
 
         self._btn_patch = QPushButton("⬡  Patch Tool")
         self._btn_patch.setCheckable(True)
@@ -580,13 +581,10 @@ class MainWindow(QMainWindow):
             "Patch Tool — Draw a selection around damaged area,\n"
             "then drag to a good area to copy texture.")
         self._btn_patch.clicked.connect(self._toggle_patch_tool)
-        self._btn_patch.setStyleSheet(
-            "QPushButton { background:#eef1f6; color:#1c2333; border:1px solid #c0cce0;"
-            " border-radius:6px; padding:5px 14px; font-size:12px; font-weight:bold; }"
-            "QPushButton:enabled:hover { background:#dce8f8; border:1px solid #8aaace; }"
-            "QPushButton:checked { background:#3e6188; color:white; border:1px solid #2a5070; }"
-            "QPushButton:disabled { background:#f0f0f0; color:#aaa; border:1px solid #ddd; }")
-        crop_layout.addWidget(self._btn_patch)
+        self._btn_patch.setStyleSheet(_tool_ss)
+        tools_row1.addWidget(self._btn_patch)
+
+        crop_layout.addLayout(tools_row1)
 
         # Apply Patch button (shown only when patch active)
         self._btn_apply_patch = QPushButton("⬡  Apply Patch")
@@ -595,11 +593,34 @@ class MainWindow(QMainWindow):
         self._btn_apply_patch.setVisible(False)
         self._btn_apply_patch.clicked.connect(self._apply_patch)
         self._btn_apply_patch.setStyleSheet(
-            "QPushButton { background:#3e6188; color:white; border:1px solid #2a5070;"
-            " border-radius:6px; padding:5px 14px; font-size:12px; font-weight:bold; }"
-            "QPushButton:hover { background:#4a7aaa; }"
-            "QPushButton:pressed { background:#2a4f70; }")
+            "QPushButton{background:#3e6188;color:white;border:1px solid #2a5070;"
+            "border-radius:6px;padding:5px 14px;font-size:12px;font-weight:bold;}"
+            "QPushButton:hover{background:#4a7aaa;}"
+            "QPushButton:pressed{background:#2a4f70;}")
         crop_layout.addWidget(self._btn_apply_patch)
+
+        # ── Row 3: Update QR + Label Edit ─────────────────────────────
+        tools_row2 = QHBoxLayout()
+        tools_row2.setSpacing(6)
+
+        self._btn_update_qr = QPushButton("🔄  Update QR")
+        self._btn_update_qr.setMinimumHeight(34)
+        self._btn_update_qr.setEnabled(False)
+        self._btn_update_qr.setToolTip(
+            "Scan QR first, then click to replace QR with a new image file.")
+        self._btn_update_qr.clicked.connect(self._update_qr_code)
+        self._btn_update_qr.setStyleSheet(_tool_ss)
+        tools_row2.addWidget(self._btn_update_qr)
+
+        self._btn_label_edit = QPushButton("✏  Label Edit")
+        self._btn_label_edit.setMinimumHeight(34)
+        self._btn_label_edit.setToolTip(
+            "Scan QR → highlight region → right-click to swap QR image")
+        self._btn_label_edit.clicked.connect(self._label_edit_mode)
+        self._btn_label_edit.setStyleSheet(_tool_ss)
+        tools_row2.addWidget(self._btn_label_edit)
+
+        crop_layout.addLayout(tools_row2)
 
         hint = QLabel("Arrow keys: move  |  +/− : resize  |  Enter: apply")
         hint.setStyleSheet("color: #888; font-size: 10px;")
@@ -647,20 +668,6 @@ class MainWindow(QMainWindow):
         self._btn_detect_qr = QPushButton("⊞  Scan QR / Label")
         self._btn_detect_qr.clicked.connect(self._detect_qr)
         qr_layout.addWidget(self._btn_detect_qr)
-
-        # Update QR button
-        self._btn_update_qr = QPushButton("🔄  Update QR Code")
-        self._btn_update_qr.setMinimumHeight(32)
-        self._btn_update_qr.setEnabled(False)
-        self._btn_update_qr.setToolTip(
-            "Scan QR first, then click to replace QR with a new image file.")
-        self._btn_update_qr.clicked.connect(self._update_qr_code)
-        self._btn_update_qr.setStyleSheet(
-            "QPushButton{background:#eef1f6;color:#1c2333;border:1px solid #c0cce0;"
-            "border-radius:6px;padding:5px 14px;font-size:12px;font-weight:bold;}"
-            "QPushButton:enabled:hover{background:#dce8f8;border:1px solid #8aaace;}"
-            "QPushButton:disabled{background:#f0f0f0;color:#aaa;border:1px solid #ddd;}")
-        qr_layout.addWidget(self._btn_update_qr)
 
         self._lbl_qr_result = QLabel("No code detected yet.")
         self._lbl_qr_result.setWordWrap(True)
@@ -767,6 +774,8 @@ class MainWindow(QMainWindow):
         self._canvas.patch_phase_changed.connect(self._on_patch_phase_changed)
         self._canvas.pen_edit_region.connect(self._edit_text_in_region)
         self._canvas.pen_scan_qr_region.connect(self._scan_qr_in_region)
+        self._canvas.qr_right_clicked.connect(self._on_qr_right_clicked)
+        self._canvas.text_right_clicked.connect(self._on_text_right_clicked)
 
     # ------------------------------------------------------------------ #
     #  Actions                                                             #
@@ -831,6 +840,7 @@ class MainWindow(QMainWindow):
         self._canvas.set_image(self._processor.current)
         self._canvas.set_crop_overlay(None, {})
         self._canvas.set_qr_regions([])
+        self._canvas.set_text_regions([])
         self._canvas.stop_pen_tool()
         self._lbl_qr_result.setText("No code detected yet.")
         self._lbl_qr_result.setStyleSheet("color: #555; font-size: 11px;")
@@ -2019,6 +2029,27 @@ class MainWindow(QMainWindow):
             self._show_qr_preview(regions[0])
             self._btn_update_qr.setEnabled(True)
             self._qr_last_region = regions[0]
+
+        elif det_type == "qr_for_label_edit":
+            # Label Edit mode — scan done, now show hint to right-click
+            regions = params.get("regions", [])
+            self._canvas.set_qr_regions(regions)
+            if regions:
+                self._qr_last_region = regions[0]
+                self._btn_update_qr.setEnabled(True)
+                self._lbl_qr_result.setText(
+                    f"✓ QR found — right-click on highlighted region to change")
+                self._lbl_qr_result.setStyleSheet(
+                    "color:#1a7a1a;font-size:11px;font-weight:bold;")
+                self._show_qr_preview(regions[0])
+                self._status.showMessage(
+                    "✏ Label Edit — Right-click on the QR region to replace it.")
+                self._show_label_edit_hint()
+            else:
+                self._lbl_qr_result.setText("No QR found for Label Edit.")
+                self._lbl_qr_result.setStyleSheet("color:#cc3333;font-size:11px;")
+                self._status.showMessage("✏ Label Edit — No QR region detected.")
+                self._show_no_qr_dialog()
         self._canvas.setFocus()
         # Update preview after detection
         self._update_crop_preview()
@@ -2369,3 +2400,460 @@ class MainWindow(QMainWindow):
                   self._btn_detect_qr, self._btn_save,
                   self._spin_angle]:
             w.setEnabled(loaded)
+
+    # ------------------------------------------------------------------ #
+    #  Label Edit — scan QR then select region for editing                 #
+    # ------------------------------------------------------------------ #
+
+    def _label_edit_mode(self):
+        """Label Edit: OCR all text blocks + scan QR → highlight both → right-click to edit."""
+        if not self._processor.is_loaded:
+            self._status.showMessage("✏ Open an image first.")
+            return
+
+        self._status.showMessage("✏ Label Edit — scanning text regions…")
+
+        import cv2, numpy as np
+
+        img   = self._processor.current
+        h, w  = img.shape[:2]
+
+        # ── OCR: detect text blocks via pytesseract ────────────────────
+        text_regions = []
+        try:
+            import pytesseract
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            data = pytesseract.image_to_data(
+                gray,
+                config="--psm 11 --oem 3",
+                output_type=pytesseract.Output.DICT)
+
+            n = len(data["text"])
+            for i in range(n):
+                txt = data["text"][i].strip()
+                conf = int(data["conf"][i]) if str(data["conf"][i]).lstrip('-').isdigit() else -1
+                if not txt or conf < 40:
+                    continue
+                bx = data["left"][i];  by = data["top"][i]
+                bw = data["width"][i]; bh = data["height"][i]
+                if bw < 8 or bh < 8:
+                    continue
+                # Sample dominant font color from the region
+                roi = img[max(0,by):min(h,by+bh), max(0,bx):min(w,bx+bw)]
+                if roi.size > 0:
+                    # Dark pixels = text color (assume light background)
+                    gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                    mask = gray_roi < 128
+                    if mask.sum() > 0:
+                        text_pixels = roi[mask]
+                        mean_color = text_pixels.mean(axis=0)  # BGR
+                        color = (int(mean_color[2]), int(mean_color[1]), int(mean_color[0]))
+                    else:
+                        color = (0, 0, 0)
+                else:
+                    color = (0, 0, 0)
+
+                # Estimate font size from bbox height (pixels → pt approx)
+                font_size_pt = max(8, int(bh * 0.72))
+
+                text_regions.append({
+                    "bbox":      (bx, by, bw, bh),
+                    "text":      txt,
+                    "color":     color,       # (R,G,B)
+                    "font_size": font_size_pt,
+                })
+
+        except Exception as e:
+            self._status.showMessage(f"✏ OCR error: {e}  — install pytesseract")
+
+        # ── Also scan QR if not already done ──────────────────────────
+        if not self._canvas._qr_regions:
+            self._start_worker("qr_for_label_edit")
+
+        # ── Show text regions on canvas ────────────────────────────────
+        self._canvas.set_text_regions(text_regions)
+        self._label_text_regions = text_regions   # store for later edit
+
+        if text_regions:
+            self._status.showMessage(
+                f"✏ Label Edit — {len(text_regions)} text block(s) found. "
+                f"Right-click any highlighted text to edit.")
+            self._show_label_edit_hint()
+        else:
+            self._status.showMessage(
+                "✏ Label Edit — No text detected. "
+                "Try scanning QR or use Pen Tool to select manually.")
+
+    def _show_label_edit_hint(self):
+        """Show a small floating hint above the canvas."""
+        from PyQt5.QtWidgets import QLabel
+        from PyQt5.QtCore import Qt as _Qt, QTimer
+        hint = QLabel("  ✏ Right-click on highlighted text or QR to edit  ", self._canvas)
+        hint.setStyleSheet(
+            "background:#1c2b45; color:#e8edf5; font-size:12px; font-weight:bold;"
+            "border-radius:6px; padding:6px 12px; border:1px solid #3e6188;")
+        hint.adjustSize()
+        hint.move((self._canvas.width() - hint.width()) // 2, 20)
+        hint.show()
+        QTimer.singleShot(2500, hint.deleteLater)
+
+    def _on_text_right_clicked(self, region: dict):
+        """Right-clicked on text region — show context menu with Edit Text option."""
+        from PyQt5.QtWidgets import QMenu, QAction
+        from PyQt5.QtGui import QCursor
+
+        menu = QMenu(self._canvas)
+        menu.setStyleSheet(
+            "QMenu{background:#1c2b45;color:#e8edf5;border:1px solid #3e6188;"
+            "border-radius:6px;padding:4px;}"
+            "QMenu::item{padding:8px 28px;border-radius:4px;font-size:13px;}"
+            "QMenu::item:selected{background:#3e6188;}"
+            "QMenu::separator{background:#3a5a88;height:1px;margin:4px 8px;}")
+
+        preview = (region.get("text") or "")[:35]
+        act_edit = QAction(f"✏  Edit:  \"{preview}\"", menu)
+        act_edit.triggered.connect(lambda: self._open_text_edit_dialog(region))
+        menu.addAction(act_edit)
+
+        menu.addSeparator()
+        act_info = QAction(
+            f"ℹ  Font size ≈ {region.get('font_size', '?')}pt", menu)
+        act_info.setEnabled(False)
+        menu.addAction(act_info)
+
+        menu.exec_(QCursor.pos())
+
+    def _open_text_edit_dialog(self, region: dict):
+        """Open edit dialog — pre-filled with detected text, matched font & color."""
+        from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout,
+                                      QLabel, QLineEdit, QPushButton,
+                                      QFontComboBox, QSpinBox, QColorDialog,
+                                      QWidget)
+        from PyQt5.QtGui import QColor, QFont, QCursor
+        from PyQt5.QtCore import Qt as _Qt
+
+        bx, by, bw, bh = region["bbox"]
+        old_text  = region.get("text", "")
+        r, g, b   = region.get("color", (0, 0, 0))
+        font_size = region.get("font_size", 24)
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Edit Text")
+        dlg.setFixedSize(460, 260)
+        dlg.setStyleSheet("QDialog{background:#f2f4f8;}")
+        vlay = QVBoxLayout(dlg)
+        vlay.setContentsMargins(0, 0, 0, 0)
+        vlay.setSpacing(0)
+
+        # ── Header ────────────────────────────────────────────────────
+        hdr = QLabel("  ✏  Edit Text in Region")
+        hdr.setFixedHeight(44)
+        hdr.setStyleSheet(
+            "background:#1c2b45;color:#e8edf5;font-size:14px;"
+            "font-weight:bold;padding-left:12px;")
+        vlay.addWidget(hdr)
+
+        body = QWidget()
+        body.setStyleSheet("background:#f2f4f8;")
+        blay = QVBoxLayout(body)
+        blay.setContentsMargins(20, 14, 20, 10)
+        blay.setSpacing(10)
+
+        # ── Font row ──────────────────────────────────────────────────
+        font_row = QHBoxLayout()
+        font_row.addWidget(QLabel("Font:"))
+        font_cb = QFontComboBox()
+        font_cb.setCurrentFont(QFont("Arial"))
+        font_row.addWidget(font_cb, 2)
+        font_row.addWidget(QLabel("Size:"))
+        size_sp = QSpinBox()
+        size_sp.setRange(6, 300)
+        size_sp.setValue(font_size)
+        font_row.addWidget(size_sp)
+
+        # ── Color button — pre-filled with detected color ─────────────
+        self._text_edit_color = QColor(r, g, b)
+        btn_color = QPushButton("■  Color")
+        btn_color.setFixedWidth(80)
+        btn_color.setStyleSheet(
+            f"background:{self._text_edit_color.name()};"
+            f"color:{'white' if (r+g+b)<380 else '#222'};"
+            "border-radius:4px;padding:3px 8px;font-weight:bold;")
+        def pick_color():
+            c = QColorDialog.getColor(self._text_edit_color, dlg)
+            if c.isValid():
+                self._text_edit_color = c
+                btn_color.setStyleSheet(
+                    f"background:{c.name()};"
+                    f"color:{'white' if c.lightness()<140 else '#222'};"
+                    "border-radius:4px;padding:3px 8px;font-weight:bold;")
+        btn_color.clicked.connect(pick_color)
+        font_row.addWidget(btn_color)
+        blay.addLayout(font_row)
+
+        # ── Text input — single line ───────────────────────────────────
+        blay.addWidget(QLabel("New text:"))
+        txt_edit = QLineEdit()
+        txt_edit.setText(old_text)
+        txt_edit.selectAll()
+        txt_edit.setStyleSheet(
+            "background:#fff;border:1px solid #c0cce0;border-radius:4px;"
+            "padding:5px 8px;font-size:14px;")
+        txt_edit.setMinimumHeight(36)
+        blay.addWidget(txt_edit)
+
+        # ── Buttons ───────────────────────────────────────────────────
+        btn_row = QHBoxLayout()
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setFixedHeight(34)
+        btn_cancel.clicked.connect(dlg.reject)
+        btn_apply = QPushButton("✔  Apply")
+        btn_apply.setFixedHeight(34)
+        btn_apply.setStyleSheet(
+            "QPushButton{background:#3e6188;color:white;font-weight:bold;"
+            "border-radius:5px;padding:6px 20px;font-size:13px;}"
+            "QPushButton:hover{background:#4a7aaa;}")
+        btn_apply.clicked.connect(dlg.accept)
+        btn_row.addWidget(btn_cancel)
+        btn_row.addStretch()
+        btn_row.addWidget(btn_apply)
+        blay.addLayout(btn_row)
+        vlay.addWidget(body, 1)
+
+        txt_edit.setFocus()
+        if dlg.exec_() != QDialog.Accepted:
+            return
+
+        new_text = txt_edit.text().strip()
+        if not new_text:
+            return
+
+        # ── Render new text onto image ─────────────────────────────────
+        try:
+            import cv2, numpy as np
+            from PIL import Image, ImageDraw, ImageFont
+
+            img = self._processor.current.copy()
+            h_img, w_img = img.shape[:2]
+
+            # White-fill original text region
+            pad = 2
+            x1 = max(0, bx - pad); y1 = max(0, by - pad)
+            x2 = min(w_img, bx + bw + pad)
+            y2 = min(h_img, by + bh + pad)
+
+            # Sample background color from region border (not center)
+            border_roi = img[max(0,by-4):by+2, bx:bx+bw]
+            if border_roi.size > 0:
+                bg_bgr  = border_roi.mean(axis=(0,1))
+                bg_color = (int(bg_bgr[2]), int(bg_bgr[1]), int(bg_bgr[0]))
+            else:
+                bg_color = (255, 255, 255)
+
+            # Fill background
+            img[y1:y2, x1:x2] = [bg_color[2], bg_color[1], bg_color[0]]
+
+            # Render text with PIL
+            pil_img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+            draw    = ImageDraw.Draw(pil_img)
+
+            fill_color = (
+                self._text_edit_color.red(),
+                self._text_edit_color.green(),
+                self._text_edit_color.blue())
+
+            # Try to load a good font; fallback to default
+            fs = size_sp.value()
+            fn = font_cb.currentFont().family()
+            pil_font = None
+            for font_path in [
+                f"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                f"/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                f"/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+            ]:
+                try:
+                    import os
+                    if os.path.exists(font_path):
+                        pil_font = ImageFont.truetype(font_path, fs)
+                        break
+                except Exception:
+                    pass
+            if pil_font is None:
+                pil_font = ImageFont.load_default()
+
+            # Draw text at original position
+            draw.text((bx, by), new_text, font=pil_font, fill=fill_color)
+            result = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+
+            # Push to history
+            self._processor._push_history()
+            self._processor.current  = result
+            self._processor.original = result.copy()
+            self._canvas.set_image(result)
+            self._canvas.set_text_regions([])
+
+            self._show_green_toast("✔  Text Updated!")
+            self._status.showMessage(
+                f"✏ Text updated: \"{old_text}\" → \"{new_text}\"")
+
+        except Exception as e:
+            self._status.showMessage(f"✏ Text render error: {e}")
+            import traceback; traceback.print_exc()
+        """Show a small floating hint above the QR region."""
+        if not self._canvas._qr_regions:
+            return
+        from PyQt5.QtWidgets import QLabel
+        from PyQt5.QtCore import Qt as _Qt, QTimer
+
+        hint = QLabel("  ✏ Right-click on QR to change  ", self._canvas)
+        hint.setStyleSheet(
+            "background:#1c2b45; color:#e8edf5; font-size:12px; font-weight:bold;"
+            "border-radius:6px; padding:6px 12px; border:1px solid #3e6188;")
+        hint.adjustSize()
+        hint.move(
+            (self._canvas.width() - hint.width()) // 2,
+            20)
+        hint.show()
+        QTimer.singleShot(2500, hint.deleteLater)
+
+    def _on_qr_right_clicked(self, region: dict):
+        """Right-clicked on QR region — show context menu with Change option."""
+        from PyQt5.QtWidgets import QMenu, QAction
+        from PyQt5.QtCore import Qt as _Qt
+
+        menu = QMenu(self._canvas)
+        menu.setStyleSheet(
+            "QMenu{background:#1c2b45;color:#e8edf5;border:1px solid #3e6188;"
+            "border-radius:6px;padding:4px;}"
+            "QMenu::item{padding:8px 28px;border-radius:4px;font-size:13px;}"
+            "QMenu::item:selected{background:#3e6188;}"
+            "QMenu::separator{background:#3a5a88;height:1px;margin:4px 8px;}")
+
+        act_change = QAction("🔄  Change QR Image", menu)
+        act_change.triggered.connect(lambda: self._change_qr_from_region(region))
+        menu.addAction(act_change)
+
+        menu.addSeparator()
+
+        act_info = QAction(
+            f"ℹ  Data: {(region.get('data') or '')[:40] or '(no data)'}", menu)
+        act_info.setEnabled(False)
+        menu.addAction(act_info)
+
+        from PyQt5.QtGui import QCursor
+        menu.exec_(QCursor.pos())
+
+    def _change_qr_from_region(self, region: dict):
+        """Open file browser → select new QR image → replace in image."""
+        from PyQt5.QtWidgets import QFileDialog
+
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select New QR Code Image",
+            "",
+            "Images (*.png *.jpg *.jpeg *.bmp *.tiff)",
+            options=QFileDialog.DontUseNativeDialog)
+        if not path:
+            return
+
+        try:
+            import cv2, numpy as np
+
+            new_qr = cv2.imread(path)
+            if new_qr is None:
+                self._status.showMessage("⊞ Cannot load selected QR image.")
+                return
+
+            bx, by, bw, bh = region["bbox"]
+            img = self._processor.current.copy()
+            h, w = img.shape[:2]
+
+            # Clamp bbox to image bounds
+            bx = max(0, bx); by = max(0, by)
+            bw = min(bw, w - bx); bh = min(bh, h - by)
+            if bw <= 0 or bh <= 0:
+                self._status.showMessage("⊞ QR region is out of bounds.")
+                return
+
+            # Resize new QR to exactly fit original QR area
+            new_qr_resized = cv2.resize(new_qr, (bw, bh),
+                                         interpolation=cv2.INTER_AREA)
+
+            # Replace pixels
+            img[by:by+bh, bx:bx+bw] = new_qr_resized
+
+            # Push to history
+            self._processor._push_history()
+            self._processor.current  = img
+            self._processor.original = img.copy()
+            self._canvas.set_image(img)
+            self._canvas.set_qr_regions([])
+            self._btn_update_qr.setEnabled(False)
+            self._qr_last_region = None
+
+            self._lbl_qr_result.setText("✓ QR label updated successfully.")
+            self._lbl_qr_result.setStyleSheet(
+                "color:#1a7a1a;font-size:11px;font-weight:bold;")
+
+            # ── Green toast notification (3 seconds) ─────────────────
+            self._show_green_toast("✔  QR Label Updated Successfully!")
+            self._status.showMessage(
+                f"✏ Label Edit: QR replaced at ({bx},{by}) size {bw}×{bh}px")
+
+        except Exception as e:
+            self._status.showMessage(f"✏ Label Edit error: {e}")
+
+    def _show_green_toast(self, message: str, duration_ms: int = 3000):
+        """Show a floating green success notification for 3 seconds."""
+        from PyQt5.QtWidgets import QLabel
+        from PyQt5.QtCore import Qt as _Qt, QTimer, QPropertyAnimation, QEasingCurve
+        from PyQt5.QtCore import QRect
+
+        toast = QLabel(f"  {message}  ", self)
+        toast.setStyleSheet("""
+            QLabel {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #43a047, stop:1 #2e7d32);
+                color: #ffffff;
+                font-size: 14px;
+                font-weight: bold;
+                font-family: Arial;
+                border-radius: 10px;
+                padding: 10px 20px;
+                border: 1px solid #1b5e20;
+            }
+        """)
+        toast.setAlignment(_Qt.AlignCenter)
+        toast.adjustSize()
+
+        # Position: center-top of main window
+        tw = toast.width() + 40
+        th = toast.height() + 4
+        toast.setFixedSize(tw, th)
+        wx = (self.width()  - tw) // 2
+        wy = 60
+        toast.move(wx, wy)
+        toast.show()
+        toast.raise_()
+
+        # Fade out animation
+        def _fade_out():
+            try:
+                # Gradually reduce opacity via stylesheet alpha trick
+                for step, alpha in enumerate([200, 160, 120, 80, 40, 0]):
+                    delay = step * 80
+                    QTimer.singleShot(delay, lambda a=alpha: toast.setStyleSheet(f"""
+                        QLabel {{
+                            background: rgba(46, 125, 50, {a});
+                            color: rgba(255,255,255,{a});
+                            font-size: 14px; font-weight: bold;
+                            font-family: Arial;
+                            border-radius: 10px; padding: 10px 20px;
+                            border: 1px solid rgba(27,94,32,{a});
+                        }}
+                    """))
+                QTimer.singleShot(500, toast.deleteLater)
+            except Exception:
+                pass
+
+        QTimer.singleShot(duration_ms, _fade_out)
